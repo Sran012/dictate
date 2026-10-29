@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bolo"
+version = "0.1.0"
+description = "voice typing for linux, hindi + english, fresh install and you are talking"
+requires-python = ">=3.9"
+dependencies = [
+    "sounddevice>=0.4.6",
+    "numpy>=1.24",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+bolo = "bolo.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["bolo*"]
