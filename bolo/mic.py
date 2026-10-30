@@ -4,7 +4,9 @@
 import sounddevice as sd
 import numpy as np
 
-HEAR_THRESHOLD = 0.05
+# fixed once i actually ran it on real hardware: peak is garbage (clicks blow
+# it up), rms is what the whisper model cares about anyway
+HEAR_THRESHOLD = 0.01
 
 
 def list_mics():
@@ -19,7 +21,7 @@ def measure(mic_id, seconds=3):
     frames = int(16000 * seconds)
     with sd.InputStream(device=mic_id, samplerate=16000, channels=1, dtype="float32") as s:
         audio, _ = s.read(frames)
-    return float(np.max(np.abs(audio)))
+    return float(np.sqrt(np.mean(audio.astype(np.float64) ** 2)))
 
 
 def scan():
