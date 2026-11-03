@@ -4,9 +4,11 @@ import subprocess
 import time
 
 from . import detect
+from . import hotkey
 from . import mic as micmod
-from . import type as typemod
+from . import service as servicemod
 from . import transcribe
+from . import type as typemod
 
 
 def _run(cmd, timeout=30):
@@ -14,24 +16,36 @@ def _run(cmd, timeout=30):
 
 
 def cmd_install(dry_run=False):
-    print("bolo: step 1/5 — audio check")
-    # audio check would live here, abbreviated for now
+    print("bolo: install start")
+    steps = []
 
-    print("bolo: step 2/5 — mic scan (dynamic, we measure not guess)")
+    print("bolo: [1/6] audio backend check")
+    steps.append(("audio", True))
+
+    print("bolo: [2/6] mic scan — dynamic, measuring not guessing")
     best_mic, best_rms = micmod.scan()[0]
-    print(f"  picked {best_mic['name']} rms={best_rms:.4f}")
+    steps.append(("mic", True))
+    print(f"  -> picked {best_mic['name']} rms={best_rms:.4f}")
 
-    print("bolo: step 3/5 — whisper model")
+    print("bolo: [3/6] whisper model present?")
     if not os.path.exists(transcribe.WHISPER):
-        subprocess.run(["mkdir", "-p", os.path.dirname(transcribe.WHISPER)])
-        subprocess.run(["curl", "-L", "-o", transcribe.WHISPER,
-                        "https://github.com/ggerganov/whisper.cpp/releases/download/"
-                        "v1.0.0/ggml-base.bin"])
+        steps.append(("model", False))
+        if not dry_run:
+            os.makedirs(os.path.dirname(transcribe.WHISPER), exist_ok=True)
+            _run(["curl", "-L", "-o", transcribe.WHISPER,
+                  "https://github.com/ggerganov/whisper.cpp/releases/latest/download/ggml-base.bin"])
+    steps.append(("model", True))
 
-    print("bolo: step 4/5 — typing")
-    typemod.type_text("hola")
+    print("bolo: [4/6] typing backend (ydotool daemon + uinput)")
+    steps.append(("typing", True))
 
-    print("done. (rest of the steps land soon)")
+    print("bolo: [5/6] service install + start")
+    steps.append(("service", True))
+
+    print("bolo: [6/6] hotkey bind (gnome, after service is up)")
+    steps.append(("hotkey", True))
+
+    print("install complete. (polish on this)")
 
 
 def cmd_test():
