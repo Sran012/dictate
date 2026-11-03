@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 
+from . import config as cfg
 from . import detect
 from . import hotkey
 from . import mic as micmod
@@ -16,45 +17,60 @@ def _run(cmd, timeout=30):
 
 
 def cmd_install(dry_run=False):
+    conf = cfg.load()
     print("bolo: install start")
-    steps = []
+    print(f"  desktop={detect.desktop()} session={detect.session()} distro={detect.distro()}")
 
     print("bolo: [1/6] audio backend check")
-    steps.append(("audio", True))
+    steps = ["audio"]
 
     print("bolo: [2/6] mic scan — dynamic, measuring not guessing")
     best_mic, best_rms = micmod.scan()[0]
-    steps.append(("mic", True))
+    steps.append("mic")
     print(f"  -> picked {best_mic['name']} rms={best_rms:.4f}")
 
-    print("bolo: [3/6] whisper model present?")
+    print("bolo: [3/6] whisper model")
+    need_download = not os.path.exists(transcribe.WHISPER)
+    steps.append("model")
+    if need_download and not dry_run:
+        os.makedirs(os.path.dirname(transcribe.WHISPER), exist_ok=True)
+        _run(["curl", "-L", "-o", transcribe.WHISPER,
+              "https://github.com/ggerganov/whisper.cpp/releases/latest/download/ggml-base.bin"])
+
+    print("bolo: [4/6] typing backend")
+    steps.append("typing")
+
+    print("bolo: [5/6] service")
+    steps.append("service")
+
+    print("bolo: [6/6] hotkey")
+    steps.append("hotkey")
+
+    print("install complete. polish pending")
+
+
+def cmd_setup(dry_run=False):
+    conf = cfg.load()
+    print("bolo: setup — repairing whatever install broke")
+    if os.path.isdir("/opt/uinput"):
+        print("  [sudo] group uinput membership")
     if not os.path.exists(transcribe.WHISPER):
-        steps.append(("model", False))
-        if not dry_run:
-            os.makedirs(os.path.dirname(transcribe.WHISPER), exist_ok=True)
-            _run(["curl", "-L", "-o", transcribe.WHISPER,
-                  "https://github.com/ggerganov/whisper.cpp/releases/latest/download/ggml-base.bin"])
-    steps.append(("model", True))
-
-    print("bolo: [4/6] typing backend (ydotool daemon + uinput)")
-    steps.append(("typing", True))
-
-    print("bolo: [5/6] service install + start")
-    steps.append(("service", True))
-
-    print("bolo: [6/6] hotkey bind (gnome, after service is up)")
-    steps.append(("hotkey", True))
-
-    print("install complete. (polish on this)")
+        print("  [sudo-free] model download")
+    print("setup done-ish")
 
 
-def cmd_test():
+def cmd_test(dry_run=False):
     print("test: recording 5s...")
     time.sleep(5)
     print("test: transcribing...")
-    words = transcribe.transcribe("/tmp/bolo-test.wav", "auto")
+    words = transcribe.transcribe("/tmp/bolo-test.wav", cfg.load()["language"])
     print("you said:", words)
     typemod.type_text(words)
+
+
+def cmd_uninstall():
+    print("bolo: uninstall — stop service, drop permission, rm prefs")
+    print("uninstall done-ish")
 
 
 def main():
@@ -76,10 +92,12 @@ def main():
 
     if args.cmd == "install":
         cmd_install(args.dry_run)
+    elif args.cmd == "setup":
+        cmd_setup(args.dry_run)
     elif args.cmd == "test":
-        cmd_test()
-    else:
-        p.print_help()
+        cmd_test(args.dry_run)
+    elif args.cmd == "uninstall":
+        cmd_uninstall()
 
 
 if __name__ == "__main__":
