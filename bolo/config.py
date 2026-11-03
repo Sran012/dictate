@@ -16,7 +16,8 @@ def load():
     if not os.path.exists(path):
         return dict(DEFAULTS)
     with open(path) as f:
-        return {**DEFAULTS, **yaml.safe_load(f) or {}}
+        loaded = yaml.safe_load(f) or {}
+    return {**DEFAULTS, **loaded}
 
 
 def save(cfg):
