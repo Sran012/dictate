@@ -5,11 +5,11 @@ import os
 
 
 UNIT = """[Unit]
-Description=bolo dictation
+Description=dictate dictation
 After=graphical-session.target
 
 [Service]
-ExecStart=/home/sujal/.local/bin/bolo-daemon
+ExecStart=/home/sujal/.local/bin/dictate-daemon
 Restart=on-failure
 
 [Install]

@@ -3,9 +3,9 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bolo"
+name = "dictate"
 version = "0.1.0"
-description = "voice typing for linux, hindi + english, fresh install and you are talking"
+description = "voice typing for linux, fresh install and you are talking"
 requires-python = ">=3.9"
 dependencies = [
     "sounddevice>=0.4.6",
@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bolo = "bolo.cli:main"
+dictate = "dictate.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["bolo*"]
+include = ["dictate*"]

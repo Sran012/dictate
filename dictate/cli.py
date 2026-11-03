@@ -18,18 +18,18 @@ def _run(cmd, timeout=30):
 
 def cmd_install(dry_run=False):
     conf = cfg.load()
-    print("bolo: install start")
+    print("dictate: install start")
     print(f"  desktop={detect.desktop()} session={detect.session()} distro={detect.distro()}")
 
-    print("bolo: [1/6] audio backend check")
+    print("dictate: [1/6] audio backend check")
     steps = ["audio"]
 
-    print("bolo: [2/6] mic scan — dynamic, measuring not guessing")
+    print("dictate: [2/6] mic scan — dynamic, measuring not guessing")
     best_mic, best_rms = micmod.scan()[0]
     steps.append("mic")
     print(f"  -> picked {best_mic['name']} rms={best_rms:.4f}")
 
-    print("bolo: [3/6] whisper model")
+    print("dictate: [3/6] whisper model")
     need_download = not os.path.exists(transcribe.WHISPER)
     steps.append("model")
     if need_download and not dry_run:
@@ -37,13 +37,13 @@ def cmd_install(dry_run=False):
         _run(["curl", "-L", "-o", transcribe.WHISPER,
               "https://github.com/ggerganov/whisper.cpp/releases/latest/download/ggml-base.bin"])
 
-    print("bolo: [4/6] typing backend")
+    print("dictate: [4/6] typing backend")
     steps.append("typing")
 
-    print("bolo: [5/6] service")
+    print("dictate: [5/6] service")
     steps.append("service")
 
-    print("bolo: [6/6] hotkey")
+    print("dictate: [6/6] hotkey")
     steps.append("hotkey")
 
     print("install complete. polish pending")
@@ -51,7 +51,7 @@ def cmd_install(dry_run=False):
 
 def cmd_setup(dry_run=False):
     conf = cfg.load()
-    print("bolo: setup — repairing whatever install broke")
+    print("dictate: setup — repairing whatever install broke")
     if os.path.isdir("/opt/uinput"):
         print("  [sudo] group uinput membership")
     if not os.path.exists(transcribe.WHISPER):
@@ -63,18 +63,18 @@ def cmd_test(dry_run=False):
     print("test: recording 5s...")
     time.sleep(5)
     print("test: transcribing...")
-    words = transcribe.transcribe("/tmp/bolo-test.wav", cfg.load()["language"])
+    words = transcribe.transcribe("/tmp/dictate-test.wav", cfg.load()["language"])
     print("you said:", words)
     typemod.type_text(words)
 
 
 def cmd_uninstall():
-    print("bolo: uninstall — stop service, drop permission, rm prefs")
+    print("dictate: uninstall — stop service, drop permission, rm prefs")
     print("uninstall done-ish")
 
 
 def main():
-    p = argparse.ArgumentParser(prog="bolo")
+    p = argparse.ArgumentParser(prog="dictate")
     sub = p.add_subparsers(dest="cmd")
 
     p_install = sub.add_parser("install", help="one command, whole pipeline")
